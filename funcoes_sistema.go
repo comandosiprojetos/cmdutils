@@ -1,6 +1,8 @@
 package cmdutils
 
 import (
+	"fmt"
+	"net"
 	"net/http"
 	"runtime"
 )
@@ -9,8 +11,8 @@ import (
 func RetornaBarrasOs() string {
 	if runtime.GOOS == "windows" {
 		return "\\"
-	} 
-	
+	}
+
 	return "/"
 }
 
@@ -22,4 +24,13 @@ func ConexaoWebAtiva() bool {
 	}
 
 	return true
+}
+
+// Valida a utilização de uma única instância abrindo um porta tcp para teste e retorna um boleano
+func ValidarInstanciaUnica(portaTcp string) bool {
+	if _, err := net.Listen("tcp", fmt.Sprintf(":%s", portaTcp)); err != nil {
+		return true
+	}
+
+	return false
 }
