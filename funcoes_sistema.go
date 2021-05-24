@@ -303,7 +303,9 @@ func RenomearArquivo(nomeAntigo string, novoNome string) error {
 	return os.Rename(nomeAntigo, novoNome)
 }
 
-func StripRegex(valor string) (string, error) {
+// Recebe uma string com um valor e retorna uma string apenas com números 
+// e letras e um valor do tipo error
+func RemoverCaracteresEspeciais(valor string) (string, error) {
 	regex, errRegex := regexp.Compile("[^a-zA-Z0-9 ]+")
 	if errRegex != nil {
 		return "", errRegex
