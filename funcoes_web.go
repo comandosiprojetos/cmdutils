@@ -8,7 +8,7 @@ import (
 	"os"
 )
 
-// Retorna um valor boelando informando se existe ou não conexão com a internet
+// Retorna um valor booleano informando se existe ou não conexão com a internet
 func ConexaoWebAtiva() bool {
 	_, err := http.Get("https://www.google.com.br/")
 	if err != nil {
@@ -18,7 +18,7 @@ func ConexaoWebAtiva() bool {
 	return true
 }
 
-// Valida a utilização de uma única instância abrindo um porta tcp para teste e retorna um boleano
+// Valida a utilização de uma única instância abrindo um porta tcp para teste e retorna um booleano
 func ValidarInstanciaUnica(portaTcp string) bool {
 	if _, err := net.Listen("tcp", fmt.Sprintf(":%s", portaTcp)); err != nil {
 		return true
@@ -48,6 +48,7 @@ func DownloadArquivo(localArquivo string, urlDownload string) error {
 	return err
 }
 
+// Retorna uma string com o ip local da máquina
 func RetornaIpLocalMaquina() (string, error) {
 	con, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {

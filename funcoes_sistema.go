@@ -32,7 +32,8 @@ func RetornaBarrasOs() string {
 	return "/"
 }
 
-// Retorna uma o string com o path absoluto de um executável no windows comando semelhente ao wish do linux
+// Retorna uma o string com o path absoluto de um executável 
+// no windows comando semelhente ao wish do linux
 func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
 	comando := fmt.Sprintf("%s in (%s) do @echo.   %s", "for %i", nomeExe, "%~$PATH:i")
 
@@ -68,9 +69,7 @@ func Encrypt(key []byte, message string) (encmess string, err error) {
 		return
 	}
 
-	//IV needs to be unique, but doesn't have to be secure.
-	//It's common to put it at the beginning of the ciphertext.
-	cipherText := make([]byte, aes.BlockSize+len(plainText))
+	cipherText := make([]byte, aes.BlockSize + len(plainText))
 	iv := cipherText[:aes.BlockSize]
 	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
 		return
@@ -79,7 +78,6 @@ func Encrypt(key []byte, message string) (encmess string, err error) {
 	stream := cipher.NewCFBEncrypter(block, iv)
 	stream.XORKeyStream(cipherText[aes.BlockSize:], plainText)
 
-	//returns to base64 encoded string
 	encmess = base64.URLEncoding.EncodeToString(cipherText)
 
 	return
@@ -211,6 +209,8 @@ func DescomprimirArquivo(localArquivo string, pastaDestino string, local7zip str
 	return nil
 }
 
+// Recebe uma string com o arquivo criptografado 7Zip e retorna um booleano 
+// informando se o arquivo está ou não integro após sua compressão
 func TesteCompressaoRetornouOK(nomeArquivo7zip string) bool {
 	var local7Zip string
 
@@ -243,6 +243,8 @@ func ArquivoExiste(caminhoArquivo string) bool {
 	return true
 }
 
+// Recebe duas strings a primeira com o nome antigo do arquivo 
+// e a segunda com novo nome do arquivo
 func RenomearArquivo(nomeAntigo string, novoNome string) error {
 	return os.Rename(nomeAntigo, novoNome)
 }
@@ -256,6 +258,7 @@ func StripRegex(valor string) (string, error) {
 	return regex.ReplaceAllString(valor, ""), nil
 }
 
+// Recebe duas datas do tipo time e retorna a diferença entre elas em uma string
 func ImprimirDiferencaEntreDuasDatas(dataHora1 time.Time, dataHora2 time.Time) string {
 	hs := dataHora1.Sub(dataHora2).Hours()
 
