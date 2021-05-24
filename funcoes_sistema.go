@@ -51,7 +51,7 @@ func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
 	return pathRetornado, nil
 }
 
-// Retorna uma string com o path absoluto do próprio executável em execução e um tipo error
+// Retorna uma string com o diretorio do próprio executável em execução e um tipo error
 func RetornaDiretorioAplicacao() (string, error) {
 	ex, err := os.Executable()
 	if err != nil {
@@ -63,6 +63,7 @@ func RetornaDiretorioAplicacao() (string, error) {
 	return exPath, nil
 }
 
+// Retorna uma string com o caminho exato do executável em execução e um tipo error
 func RetornaCaminhoAbsolutoAplicacao() (string, error) {
 	ex, err := os.Executable()
 	if err != nil {
