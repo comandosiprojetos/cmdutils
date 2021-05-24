@@ -52,15 +52,24 @@ func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
 }
 
 // Retorna uma string com o path absoluto do próprio executável em execução e um tipo error
-func RetornaPathAbsolutoAplicacao() (string, error) {
+func RetornaDiretorioAplicacao() (string, error) {
 	ex, err := os.Executable()
 	if err != nil {
 		return "", err
 	}
 
-	exPath := filepath.Dir(ex)
+	exPath := fmt.Sprint(filepath.Dir(ex), RetornaBarrasOs())
 
 	return exPath, nil
+}
+
+func RetornaCaminhoAbsolutoAplicacao() (string, error) {
+	ex, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+
+	return ex, nil
 }
 
 // Recebe um []byte com uma chave de criptografia e uma string com a mensagem a ser criptografada
@@ -207,8 +216,12 @@ func ComprimirArquivoCom7Zip(nomeArquivo7zip string, nomeArquivo string) error {
 	local7Zip = "7z"
 
 	if runtime.GOOS == "windows" {
-		pathAbsolutoAplicacao, _ := RetornaPathAbsolutoAplicacao()
-		local7Zip = fmt.Sprint(pathAbsolutoAplicacao, RetornaBarrasOs(), "7z")
+		pathAbsolutoAplicacao, errRetornaDiretorio := RetornaDiretorioAplicacao()
+		if errRetornaDiretorio != nil {
+			return errRetornaDiretorio
+		}
+
+		local7Zip = fmt.Sprint(pathAbsolutoAplicacao, "7z")
 	}
 
 	cmd := exec.Command(local7Zip, "a", nomeArquivo7zip, nomeArquivo)
@@ -230,7 +243,11 @@ func DescomprimirArquivoCom7Zip(localArquivo string, pastaDestino string) error 
 	local7Zip := ""
 
 	if runtime.GOOS == "windows" {
-		pathAbsolutoAplicacao, _ := RetornaPathAbsolutoAplicacao()
+		pathAbsolutoAplicacao, errRetornaDiretorio := RetornaDiretorioAplicacao()
+		if errRetornaDiretorio != nil {
+			return errRetornaDiretorio
+		}
+
 		local7Zip = fmt.Sprint(pathAbsolutoAplicacao, RetornaBarrasOs(), "7z")
 	}
 
@@ -250,7 +267,11 @@ func TesteCompressaoRetornouOK(nomeArquivo7zip string) bool {
 	local7Zip := "7z"
 
 	if runtime.GOOS == "windows" {
-		pathAbsolutoAplicacao, _ := RetornaPathAbsolutoAplicacao()
+		pathAbsolutoAplicacao, errRetornaDiretorio := RetornaDiretorioAplicacao()
+		if errRetornaDiretorio != nil {
+			return false
+		}
+
 		local7Zip = fmt.Sprint(pathAbsolutoAplicacao, RetornaBarrasOs(), "7z")
 	}
 
@@ -404,4 +425,50 @@ func RemoverItemSlice(Slice interface{}, Indice int) {
 
 		value.Set(result)
 	}
+}
+
+// Retorna uma string com a data e hora no padrão dd-mm-yyyy hh:mm:ss
+func RetornaDataHora() string {
+	now := time.Now()
+
+	return now.Format("02-01-2006 15:04:05")
+}
+
+// Retorna uam srinf com o md5 do próprio exeutável da aplicação em execução
+func RetornarMD5Aplicacao() (string, error) {
+	caminhoAplicacao, errRetornaCaminho := RetornaCaminhoAbsolutoAplicacao()
+	if errRetornaCaminho != nil {
+		return "", errRetornaCaminho
+	}
+
+	if _, err := os.Stat(caminhoAplicacao); os.IsNotExist(err) {
+		return "", nil
+	}
+
+	return CalcularMD5Arquivo(caminhoAplicacao)
+}
+
+// Recebe uma string com um valor textual e um int com a quantidade 
+// de digitos numéricos que esse valor textual deve conter e retorna um valor booleano 
+// para confirmar ou negar se a string passada possui a quantidade de digitos esperada ou não
+func StringPossuiQuantidadeDeDigitosNumericosCorreta(valor string, quantidadeDigitos int) bool {
+	var valorCalculado string
+
+	validarDigitosNumericos := regexp.MustCompile("[0-9]+")
+	valorExtraido := validarDigitosNumericos.FindAllString(valor, -1)
+	
+	for indice := range valorExtraido {
+		valorCalculado = valorCalculado + valorExtraido[indice]
+	}
+
+	if len(valorCalculado) < quantidadeDigitos {
+		return false
+	}
+
+	return true
+}
+
+// Recebe um valor do tipo []byte e retorna uma string com o valor convertido
+func BytesToString(valorEmBytes []byte) string {
+	return string(valorEmBytes[:])
 }

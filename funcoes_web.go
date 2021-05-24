@@ -62,3 +62,15 @@ func RetornaIpLocalMaquina() (string, error) {
 
 	return fmt.Sprint(localAddr.IP), nil
 }
+
+// Recebe uma string com uma url e retorna um valor booleano para informar se a url é válida ou não
+func PingUrl(url string) bool {
+	resp, netErrors := http.Get(url)
+	if netErrors != nil {
+		return false
+	}
+
+	defer resp.Body.Close()
+
+	return true
+}
