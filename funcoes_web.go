@@ -28,6 +28,7 @@ func ValidarInstanciaUnica(portaTcp string) bool {
 }
 
 // Recebe um string com o caminho do arquivo e outra string com a url de download
+// retorna um tipo error
 func DownloadArquivo(localArquivo string, urlDownload string) error {
 	resp, err := http.Get(urlDownload)
 	if err != nil {
@@ -48,7 +49,7 @@ func DownloadArquivo(localArquivo string, urlDownload string) error {
 	return err
 }
 
-// Retorna uma string com o ip local da máquina
+// Retorna uma string com o ip local da máquina e um tipo error
 func RetornaIpLocalMaquina() (string, error) {
 	con, err := net.Dial("udp", "8.8.8.8:80")
 	if err != nil {

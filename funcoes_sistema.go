@@ -32,8 +32,10 @@ func RetornaBarrasOs() string {
 	return "/"
 }
 
-// Retorna uma o string com o path absoluto de um executável 
-// no windows comando semelhente ao wish do linux
+// Recebe uma string com o nome de um executável e retorna uma o string com o 
+// path absoluto de um executável no windows e um tipo error 
+// comando semelhante ao wish do linux
+// o nome do executável informado precisa estar no path global do windows
 func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
 	comando := fmt.Sprintf("%s in (%s) do @echo.   %s", "for %i", nomeExe, "%~$PATH:i")
 
@@ -49,7 +51,7 @@ func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
 	return pathRetornado, nil
 }
 
-// Retorna uma string com o path absoluto do executável compilado windows
+// Retorna uma string com o path absoluto do próprio executável em execução e um tipo error
 func RetornaPathAbsolutoAplicacao() (string, error) {
 	ex, err := os.Executable()
 	if err != nil {
@@ -61,52 +63,56 @@ func RetornaPathAbsolutoAplicacao() (string, error) {
 	return exPath, nil
 }
 
-func Encrypt(key []byte, message string) (encmess string, err error) {
-	plainText := []byte(message)
+// Recebe um []byte com uma chave de criptografia e uma string com a mensagem a ser criptografada
+// Retorna uma string com a mensagem criptografada e um tipo error
+func CriptografarTextoUtilizandoAES(chave []byte, mensagem string) (mensagemCriptografada string, err error) {
+	mensagemOriginal := []byte(mensagem)
 
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(chave)
 	if err != nil {
 		return
 	}
 
-	cipherText := make([]byte, aes.BlockSize + len(plainText))
+	cipherText := make([]byte, aes.BlockSize+len(mensagemOriginal))
 	iv := cipherText[:aes.BlockSize]
 	if _, err = io.ReadFull(rand.Reader, iv); err != nil {
 		return
 	}
 
 	stream := cipher.NewCFBEncrypter(block, iv)
-	stream.XORKeyStream(cipherText[aes.BlockSize:], plainText)
+	stream.XORKeyStream(cipherText[aes.BlockSize:], mensagemOriginal)
 
-	encmess = base64.URLEncoding.EncodeToString(cipherText)
+	mensagemCriptografada = base64.URLEncoding.EncodeToString(cipherText)
 
 	return
 }
 
-func Decrypt(key []byte, securemess string) (decodedmess string, err error) {
-	cipherText, err := base64.URLEncoding.DecodeString(securemess)
+// Recebe um []byte com uma chave de criptografia e uma string com a mensagem criptografada
+// Retorna uma string com a mensagem descriptografada e um tipo error
+func DescriptografarTextoUtilizandoAES(chave []byte, mensagemCriptografada string) (mensagemDecodificada string, err error) {
+	textoCriptografado, err := base64.URLEncoding.DecodeString(mensagemCriptografada)
 	if err != nil {
 		return
 	}
 
-	block, err := aes.NewCipher(key)
+	block, err := aes.NewCipher(chave)
 	if err != nil {
 		return
 	}
 
-	if len(cipherText) < aes.BlockSize {
-		err = errors.New("Ciphertext block size is too short!")
+	if len(textoCriptografado) < aes.BlockSize {
+		err = errors.New("O tamanho do bloco de texto cifrado é muito curto!")
 		return
 	}
 
-	iv := cipherText[:aes.BlockSize]
-	cipherText = cipherText[aes.BlockSize:]
+	iv := textoCriptografado[:aes.BlockSize]
+	textoCriptografado = textoCriptografado[aes.BlockSize:]
 
 	stream := cipher.NewCFBDecrypter(block, iv)
 
-	stream.XORKeyStream(cipherText, cipherText)
+	stream.XORKeyStream(textoCriptografado, textoCriptografado)
 
-	decodedmess = string(cipherText)
+	mensagemDecodificada = string(textoCriptografado)
 
 	return
 }
@@ -119,23 +125,25 @@ func RetornarUUID() string {
 }
 
 // Recebe uma string com o local do arquivo e retorna uma string com o md5 do arquivo calculado
+// e um tipo error
 func CalcularMD5Arquivo(localArquivo string) (string, error) {
 	f, err := os.Open(localArquivo)
 	if err != nil {
-		return "", fmt.Errorf("Ocorreu um erro ao abrir o arquivo para calcular md5 do arquivo. Erro: %s", err.Error())
+		return "", err
 	}
 
 	defer f.Close()
 
 	h := md5.New()
 	if _, err := io.Copy(h, f); err != nil {
-		return "", fmt.Errorf("Ocorreu um erro ao calcular md5 do arquivo. Erro: %s", err.Error())
+		return "", err
 	}
 
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
 // Recebe uma string com o caminho de um diretório e apaga recursivamente o diretório
+// e retorna um tipo error
 func RemoverPasta(caminhoDiretorio string) error {
 	listaArquivos, errGlob := filepath.Glob(filepath.Join(caminhoDiretorio, "*"))
 	if errGlob != nil {
@@ -157,12 +165,11 @@ func RemoverPasta(caminhoDiretorio string) error {
 	return nil
 }
 
-// Recebe uma string com o nome da pasta e a cria no local informado
-func CriarPasta(nomePasta string, ignorarPastaCriada bool) error {
+// Recebe uma string com o local e nome da pasta a ser criada e ignora a criação caso a pasta já exista
+// e retorna um error
+func CriarPastaIgnorandoCasoJaExista(nomePasta string) error {
 	if _, errStat := os.Stat(nomePasta); !os.IsNotExist(errStat) {
-		if !ignorarPastaCriada {
-			return fmt.Errorf("Não foi possível criar a pasta '%s' Pasta já existe. Erro original: %s", nomePasta, errStat.Error())
-		}
+		return nil
 	} else {
 		os.MkdirAll(nomePasta, os.ModePerm)
 
@@ -174,11 +181,31 @@ func CriarPasta(nomePasta string, ignorarPastaCriada bool) error {
 	return nil
 }
 
-func ComprimirArquivo(nomeArquivo7zip string, nomeArquivo string) error {
+// Recebe uma string com o local e nome da pasta a ser criada e retorna um erro caso a pasta já exista
+// retorna um error
+func CriarPastaValidandoSeAPastaExiste(nomePasta string) error {
+	if _, errStat := os.Stat(nomePasta); !os.IsNotExist(errStat) {
+		return fmt.Errorf("Não foi possível criar a pasta '%s' Pasta já existe. Erro original: %s", nomePasta, errStat.Error())
+	} else {
+		os.MkdirAll(nomePasta, os.ModePerm)
+
+		if _, errStat := os.Stat(nomePasta); os.IsNotExist(errStat) {
+			return fmt.Errorf("Não foi possível criar a pasta '%s'. Erro original: %s", nomePasta, errStat.Error())
+		}
+	}
+
+	return nil
+}
+
+// Realiza a compressão de um arquivo utilizando o 7Zip
+// No windows irá utilizar as dlls presentes na pasta da aplicação
+// equanto que no linux será necessário ter um pacote do 7Zip instalado no sistema operacional
+// Recebe uma string com o nome do arquivo já com a extenção .7z e outra string com o nome original do arquivo
+func ComprimirArquivoCom7Zip(nomeArquivo7zip string, nomeArquivo string) error {
 	var local7Zip string
 
 	local7Zip = "7z"
-	
+
 	if runtime.GOOS == "windows" {
 		pathAbsolutoAplicacao, _ := RetornaPathAbsolutoAplicacao()
 		local7Zip = fmt.Sprint(pathAbsolutoAplicacao, RetornaBarrasOs(), "7z")
@@ -194,12 +221,20 @@ func ComprimirArquivo(nomeArquivo7zip string, nomeArquivo string) error {
 	return nil
 }
 
-func DescomprimirArquivo(localArquivo string, pastaDestino string, local7zip string) error {
-	if runtime.GOOS == "linux" {
-		local7zip = ""
+// Realiza a descompressão de um arquivo utilizando o 7Zip
+// No windows irá utilizar as dlls presentes na pasta da aplicação
+// equanto que no linux será necessário ter um pacote do 7Zip instalado no sistema operacional
+// Recebe uma string com o local exato do arquivo, uma string com o diretório para extração
+// e uma string com o local do executável
+func DescomprimirArquivoCom7Zip(localArquivo string, pastaDestino string) error {
+	local7Zip := ""
+
+	if runtime.GOOS == "windows" {
+		pathAbsolutoAplicacao, _ := RetornaPathAbsolutoAplicacao()
+		local7Zip = fmt.Sprint(pathAbsolutoAplicacao, RetornaBarrasOs(), "7z")
 	}
 
-	cmd := exec.Command(fmt.Sprintf("%s%s", local7zip, "7z"), "x", localArquivo, fmt.Sprint("-o", pastaDestino))
+	cmd := exec.Command(fmt.Sprintf("%s%s", local7Zip, "7z"), "x", localArquivo, fmt.Sprint("-o", pastaDestino))
 
 	err := cmd.Run()
 	if err != nil {
@@ -209,12 +244,10 @@ func DescomprimirArquivo(localArquivo string, pastaDestino string, local7zip str
 	return nil
 }
 
-// Recebe uma string com o arquivo criptografado 7Zip e retorna um booleano 
+// Recebe uma string com o arquivo compactado com 7Zip e retorna um booleano
 // informando se o arquivo está ou não integro após sua compressão
 func TesteCompressaoRetornouOK(nomeArquivo7zip string) bool {
-	var local7Zip string
-
-	local7Zip = "7z"
+	local7Zip := "7z"
 
 	if runtime.GOOS == "windows" {
 		pathAbsolutoAplicacao, _ := RetornaPathAbsolutoAplicacao()
@@ -243,7 +276,7 @@ func ArquivoExiste(caminhoArquivo string) bool {
 	return true
 }
 
-// Recebe duas strings a primeira com o nome antigo do arquivo 
+// Recebe duas strings a primeira com o nome antigo do arquivo
 // e a segunda com novo nome do arquivo
 func RenomearArquivo(nomeAntigo string, novoNome string) error {
 	return os.Rename(nomeAntigo, novoNome)
@@ -271,6 +304,7 @@ func ImprimirDiferencaEntreDuasDatas(dataHora1 time.Time, dataHora2 time.Time) s
 	return fmt.Sprint(math.Abs(hs), " horas, ", math.Abs(ms), " minutos, ", math.Abs(ss), " segundos ")
 }
 
+// Recebe uma string com o caminho do arquivo e o remove caso existe e retorna um tipo errror
 func RemoverArquivo(localArquivo string) error {
 	if _, err := os.Stat(localArquivo); !os.IsNotExist(err) {
 		err := os.Remove(localArquivo)
@@ -282,6 +316,8 @@ func RemoverArquivo(localArquivo string) error {
 	return nil
 }
 
+// Recebe uma string com o caminho do arquivo retorna um tipo int64 com o tamanho do arquivo
+// e um tipo errror
 func RetornaTamanhoArquivo(localArquivo string) (int64, error) {
 	fi, err := os.Stat(localArquivo)
 	if err != nil {
@@ -293,42 +329,46 @@ func RetornaTamanhoArquivo(localArquivo string) (int64, error) {
 	return size, nil
 }
 
-func RetornaValorFormatado(valorEmBytes float64) string {
-	var suffixes [5]string
+// Recebe um float64 com o valor em bytes e formata de
+// acordo com o tamanho retornando uma string com o valor em B, KB, MB, GB ou TB
+func FormatarValorEmBytes(tamanhoEmBytes float64) string {
+	var sufixo [5]string
 
-	size := valorEmBytes
-	suffixes[0] = "B"
-	suffixes[1] = "KB"
-	suffixes[2] = "MB"
-	suffixes[3] = "GB"
-	suffixes[4] = "TB"
+	sufixo[0] = "B"
+	sufixo[1] = "KB"
+	sufixo[2] = "MB"
+	sufixo[3] = "GB"
+	sufixo[4] = "TB"
 
-	base := math.Log(size) / math.Log(1024)
-	getSize := round(math.Pow(1024, base-math.Floor(base)), .5, 2)
-	getSuffix := suffixes[int(math.Floor(base))]
+	base := math.Log(tamanhoEmBytes) / math.Log(1024)
+	tamanhoCalculado := ArredondarValor(math.Pow(1024, base-math.Floor(base)), .5, 2)
+	sufixoRetornado := sufixo[int(math.Floor(base))]
 
-	return fmt.Sprint(strconv.FormatFloat(getSize, 'f', -1, 64) + " " + string(getSuffix))
+	return fmt.Sprint(strconv.FormatFloat(tamanhoCalculado, 'f', -1, 64) + " " + string(sufixoRetornado))
 }
 
-func round(val float64, roundOn float64, places int) (newVal float64) {
+// Recebe um tipo float64 com o valor a ser arredondado, um valor do tipo float64 
+// com o digito que deve ser considerado no arredondamento e um valor do tipo int 
+// indicando em quantas casas decimais o valor será arredondado
+func ArredondarValor(valorOriginal float64, arredondarEm float64, casasDecimais int) float64 {
 	var round float64
 
-	pow := math.Pow(10, float64(places))
-	digit := pow * val
-	_, div := math.Modf(digit)
+	pow := math.Pow(10, float64(casasDecimais))
+	digito := pow * valorOriginal
+	_, divisao := math.Modf(digito)
 
-	if div >= roundOn {
-		round = math.Ceil(digit)
+	if divisao >= arredondarEm {
+		round = math.Ceil(digito)
 	} else {
-		round = math.Floor(digit)
+		round = math.Floor(digito)
 	}
 
-	newVal = round / pow
-
-	return
+	return round / pow
 }
 
-func RetornaLista(diretorio string) ([]string, error) {
+// Recebe o caminho de um diretório e retorna uma lista do tipo string
+// com os arquivos presentes nesse diretório
+func RetornaListaDeArquivosDeUmDiretorio(diretorio string) ([]string, error) {
 	var files []string
 
 	err := filepath.Walk(diretorio, func(path string, info os.FileInfo, err error) error {
@@ -346,14 +386,14 @@ func RetornaLista(diretorio string) ([]string, error) {
 	return files, nil
 }
 
+// Recebe uma string com data e hora no padrão 2021-11-11 23:59:59
+// e retorna uma string no padrão 2021-11-11T23:59:59.000-0200
 func FormataDataPadraoISO8601(DataHora string) string {
-	var dataFormatada string
-
-	dataFormatada = fmt.Sprintf("%s%s", strings.Replace(DataHora, " ", "T", 1), ".000-0200")
-
-	return dataFormatada
+	return fmt.Sprintf("%s%s", strings.Replace(DataHora, " ", "T", 1), ".000-0200")
 }
 
+// Recebe um slice em interface e um indice do tipo int e remove
+// o item desse slice de acordo com o indice informado
 func RemoverItemSlice(Slice interface{}, Indice int) {
 	vField := reflect.ValueOf(Slice)
 
