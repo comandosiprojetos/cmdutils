@@ -32,8 +32,8 @@ func RetornaBarrasOs() string {
 	return "/"
 }
 
-// Recebe uma string com o nome de um executável e retorna uma o string com o 
-// path absoluto de um executável no windows e um tipo error 
+// Recebe uma string com o nome de um executável e retorna uma o string com o
+// path absoluto de um executável no windows e um tipo error
 // comando semelhante ao wish do linux
 // o nome do executável informado precisa estar no path global do windows
 func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
@@ -71,6 +71,16 @@ func RetornaCaminhoAbsolutoAplicacao() (string, error) {
 	}
 
 	return ex, nil
+}
+
+// Retorna uma string com o nome do executável em execução e um tipo error
+func RetornaNomeDoExeDaAplicacao() (string, error) {
+	ex, err := os.Executable()
+	if err != nil {
+		return "", err
+	}
+
+	return filepath.Base(ex), nil
 }
 
 // Recebe um []byte com uma chave de criptografia e uma string com a mensagem a ser criptografada
@@ -304,7 +314,7 @@ func RenomearArquivo(nomeAntigo string, novoNome string) error {
 	return os.Rename(nomeAntigo, novoNome)
 }
 
-// Recebe uma string com um valor e retorna uma string apenas com números 
+// Recebe uma string com um valor e retorna uma string apenas com números
 // e letras e um valor do tipo error
 func RemoverCaracteresEspeciais(valor string) (string, error) {
 	regex, errRegex := regexp.Compile("[^a-zA-Z0-9 ]+")
@@ -371,8 +381,8 @@ func FormatarValorEmBytes(tamanhoEmBytes float64) string {
 	return fmt.Sprint(strconv.FormatFloat(tamanhoCalculado, 'f', -1, 64) + " " + string(sufixoRetornado))
 }
 
-// Recebe um tipo float64 com o valor a ser arredondado, um valor do tipo float64 
-// com o digito que deve ser considerado no arredondamento e um valor do tipo int 
+// Recebe um tipo float64 com o valor a ser arredondado, um valor do tipo float64
+// com o digito que deve ser considerado no arredondamento e um valor do tipo int
 // indicando em quantas casas decimais o valor será arredondado
 func ArredondarValor(valorOriginal float64, arredondarEm float64, casasDecimais int) float64 {
 	var round float64
@@ -451,15 +461,15 @@ func RetornarMD5Aplicacao() (string, error) {
 	return CalcularMD5Arquivo(caminhoAplicacao)
 }
 
-// Recebe uma string com um valor textual e um int com a quantidade 
-// de digitos numéricos que esse valor textual deve conter e retorna um valor booleano 
+// Recebe uma string com um valor textual e um int com a quantidade
+// de digitos numéricos que esse valor textual deve conter e retorna um valor booleano
 // para confirmar ou negar se a string passada possui a quantidade de digitos esperada ou não
 func StringPossuiQuantidadeDeDigitosNumericosCorreta(valor string, quantidadeDigitos int) bool {
 	var valorCalculado string
 
 	validarDigitosNumericos := regexp.MustCompile("[0-9]+")
 	valorExtraido := validarDigitosNumericos.FindAllString(valor, -1)
-	
+
 	for indice := range valorExtraido {
 		valorCalculado = valorCalculado + valorExtraido[indice]
 	}
