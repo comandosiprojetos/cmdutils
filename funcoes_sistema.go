@@ -20,8 +20,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/google/uuid"
 	"github.com/denisbrodbeck/machineid"
+	"github.com/google/uuid"
 )
 
 // Retorna uma string com o tipo de barras utilizado no linux ou no windows
@@ -497,7 +497,7 @@ func ResetarVariaveisAmbiente(nomeVariavel string) error {
 	return nil
 }
 
-// Recebe uma string com uma chave criptografica e retorna uma string com o id 
+// Recebe uma string com uma chave criptografica e retorna uma string com o id
 // único gerado e um tipo error
 func RetornaIdUnicoMaquina(chaveCriptografica string) (string, error) {
 	id, err := machineid.ProtectedID(chaveCriptografica)
@@ -511,4 +511,11 @@ func RetornaIdUnicoMaquina(chaveCriptografica string) (string, error) {
 // Recebe uma string com um valor e retorna uma string com esse valor entre colchetes [valor]
 func RetornaValorConcatenadoEntreColchetes(valor string) string {
 	return fmt.Sprintf("[%s]", valor)
+}
+
+//Retorna uma string com a data e hora do sistema no padrão pt-BR
+func RetornaDataHoraPadraoPtBR() string {
+	now := time.Now()
+
+	return now.Format("02-01-2006 15:04:05")
 }
