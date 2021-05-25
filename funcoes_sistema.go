@@ -21,6 +21,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/denisbrodbeck/machineid"
 )
 
 // Retorna uma string com o tipo de barras utilizado no linux ou no windows
@@ -484,4 +485,25 @@ func StringPossuiQuantidadeDeDigitosNumericosCorreta(valor string, quantidadeDig
 // Recebe um valor do tipo []byte e retorna uma string com o valor convertido
 func BytesToString(valorEmBytes []byte) string {
 	return string(valorEmBytes[:])
+}
+
+// Recebe o nome de uma variável de ambiente reseta a mesma e retorna um tipo error
+func ResetarVariaveisAmbiente(nomeVariavel string) error {
+	err := os.Unsetenv(nomeVariavel)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+// Recebe uma string com uma chave criptografica e retorna uma string com o id 
+// único gerado e um tipo error
+func RetornaIdUnicoMaquina(chaveCriptografica string) (string, error) {
+	id, err := machineid.ProtectedID(chaveCriptografica)
+	if err != nil {
+		return "", err
+	}
+
+	return id, nil
 }
