@@ -507,3 +507,8 @@ func RetornaIdUnicoMaquina(chaveCriptografica string) (string, error) {
 
 	return id, nil
 }
+
+// Recebe uma string com um valor e retorna uma string com esse valor entre colchetes [valor]
+func RetornaValorConcatenadoEntreColchetes(valor string) string {
+	return fmt.Sprintf("[%s]", valor)
+}

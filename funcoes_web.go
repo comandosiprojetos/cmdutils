@@ -5,6 +5,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 )
 
@@ -73,4 +74,24 @@ func PingUrl(url string) bool {
 	defer resp.Body.Close()
 
 	return true
+}
+
+// Recebe uma string com uma url e uma string com o nome do parâmetro a ser extraído 
+// e retorna uma string com esse parâmetro extraído da url e um tipo error
+func RetornaParametroPresenteEmUmaUrlInformada(urlInformada, nomeParametro string) (error, string) {
+	u, errParse := url.Parse(urlInformada)
+	if errParse != nil {
+		return errParse, ""
+	}
+
+	urlRaw, errParseQuery := url.ParseQuery(u.RawQuery)
+	if errParseQuery != nil {
+		return errParseQuery, ""
+	}
+
+	if len(urlRaw[nomeParametro]) == 0 {
+		return fmt.Errorf("O parâmetro informado '%s' não pode ser localizado na url '%s' informada. ", nomeParametro, urlInformada), ""
+	}
+
+	return nil, urlRaw[nomeParametro][0]
 }
