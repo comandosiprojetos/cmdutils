@@ -166,6 +166,10 @@ func CalcularMD5Arquivo(localArquivo string) (string, error) {
 // Recebe uma string com o caminho de um diretório e apaga recursivamente o diretório
 // e retorna um tipo error
 func RemoverPasta(caminhoDiretorio string) error {
+	if _, errStat := os.Stat(caminhoDiretorio); os.IsNotExist(errStat) {
+		return nil
+	}
+
 	listaArquivos, errGlob := filepath.Glob(filepath.Join(caminhoDiretorio, "*"))
 	if errGlob != nil {
 		return errGlob
