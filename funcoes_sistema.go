@@ -163,8 +163,8 @@ func CalcularMD5Arquivo(localArquivo string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-// Recebe uma string com o caminho de um diretório e apaga recursivamente o diretório
-// e retorna um tipo error
+// Recebe uma string com o caminho de um diretório e apaga recursivamente o diretório 
+// caso este diretório não exista ignora o processo e retorna um tipo error
 func RemoverPasta(caminhoDiretorio string) error {
 	if _, errStat := os.Stat(caminhoDiretorio); os.IsNotExist(errStat) {
 		return nil
