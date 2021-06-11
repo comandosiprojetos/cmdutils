@@ -19,6 +19,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/google/uuid"
@@ -163,7 +164,7 @@ func CalcularMD5Arquivo(localArquivo string) (string, error) {
 	return fmt.Sprintf("%x", h.Sum(nil)), nil
 }
 
-// Recebe uma string com o caminho de um diretório e apaga recursivamente o diretório 
+// Recebe uma string com o caminho de um diretório e apaga recursivamente o diretório
 // caso este diretório não exista ignora o processo e retorna um tipo error
 func RemoverPasta(caminhoDiretorio string) error {
 	if _, errStat := os.Stat(caminhoDiretorio); os.IsNotExist(errStat) {
@@ -522,4 +523,14 @@ func RetornaDataHoraPadraoPtBR() string {
 	now := time.Now()
 
 	return now.Format("02-01-2006 15:04:05")
+}
+
+// Recebe uma string e retorna uma string sem espaços
+func RemoverEspacosString(str string) string {
+	return strings.Map(func(r rune) rune {
+		if unicode.IsSpace(r) {
+			return -1
+		}
+		return r
+	}, str)
 }
