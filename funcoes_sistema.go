@@ -567,3 +567,20 @@ func ExecutaComandoTerminalLinux(tipoComando string) (string, error) {
 
 	return stdout.String(), nil
 }
+
+// Retorna uma string contendo a arquitetura do processador
+// x86_64 para processadores de 64 bits e i368 para sistemas de 32 bits
+func RetornaArquiteturaProcessador() string {
+	var arquitetura string
+
+	arquitetura = runtime.GOARCH
+
+	if arquitetura == "amd64" {
+		return "x86_64"
+
+	} else if arquitetura == "386" {
+		return "i368"
+	}
+
+	return ""
+}
