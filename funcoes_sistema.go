@@ -1,6 +1,7 @@
 package cmdutils
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
@@ -533,4 +534,36 @@ func RemoverEspacosString(str string) string {
 		}
 		return r
 	}, str)
+}
+
+// Recebe uma string com o comando a ser executado e retorna o stdout do comando e um tipo error
+// Utilizado apenas no windows
+func ExecutaComandoTerminalWindows(command string) (string, error) {
+	cmd := exec.Command("cmd", "/C", command)
+
+	stdOut, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("[ERRO] %s", err.Error())
+	}
+
+	return string(stdOut), nil
+}
+
+// Recebe uma string com o comando a ser executado e retorna o stdout do comando e um tipo error
+// Utilizado apenas no linux
+func ExecutaComandoTerminalLinux(tipoComando string) (string, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	cmd := exec.Command("bash", "-c", tipoComando)
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("[ERRO] %s", err.Error())
+	}
+
+	return stdout.String(), nil
 }
