@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"time"
 )
 
 // Retorna um valor booleano informando se existe ou não conexão com a internet
@@ -76,7 +77,7 @@ func PingUrl(url string) bool {
 	return true
 }
 
-// Recebe uma string com uma url e uma string com o nome do parâmetro a ser extraído 
+// Recebe uma string com uma url e uma string com o nome do parâmetro a ser extraído
 // e retorna uma string com esse parâmetro extraído da url e um tipo error
 func RetornaParametroPresenteEmUmaUrlInformada(urlInformada, nomeParametro string) (error, string) {
 	u, errParse := url.Parse(urlInformada)
@@ -94,4 +95,29 @@ func RetornaParametroPresenteEmUmaUrlInformada(urlInformada, nomeParametro strin
 	}
 
 	return nil, urlRaw[nomeParametro][0]
+}
+
+// Recebe um inteiro com a porta tcp a ser verificada e checa se a mesma está ou não aberta
+// retorna um tipo booleano e um tipo error
+func PortaTcpEstaAberta(portaTCP int) (bool, error) {
+	timeOutConexao := time.Second
+	conexao, errConexao := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", fmt.Sprint(portaTCP)), timeOutConexao)
+	if errConexao != nil {
+		return false, nil
+	}
+
+	if conexao != nil {
+		defer conexao.Close()
+		return true, nil
+	}
+
+	return false, nil
+}
+
+// Retorna uma instância do tipo net.conn e um tipo error 
+func RetornaInstanciaNetConn(host string, portaTCP int) (net.Conn, error) {
+	timeOutConexao := time.Second
+	conexao, errConexao := net.DialTimeout("tcp", net.JoinHostPort(host, fmt.Sprint(portaTCP)), timeOutConexao)
+
+	return conexao, errConexao
 }
