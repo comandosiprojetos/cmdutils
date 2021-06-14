@@ -99,9 +99,9 @@ func RetornaParametroPresenteEmUmaUrlInformada(urlInformada, nomeParametro strin
 
 // Recebe um inteiro com a porta tcp a ser verificada e checa se a mesma está ou não aberta
 // retorna um tipo booleano e um tipo error
-func PortaTcpEstaAberta(portaTCP int) (bool, error) {
+func PortaTcpEstaAberta(host string, portaTCP int) (bool, error) {
 	timeOutConexao := time.Second
-	conexao, errConexao := net.DialTimeout("tcp", net.JoinHostPort("127.0.0.1", fmt.Sprint(portaTCP)), timeOutConexao)
+	conexao, errConexao := net.DialTimeout("tcp", net.JoinHostPort(host, fmt.Sprint(portaTCP)), timeOutConexao)
 	if errConexao != nil {
 		return false, nil
 	}
