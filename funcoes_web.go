@@ -114,10 +114,7 @@ func PortaTcpEstaAberta(host string, portaTCP int) (bool, error) {
 	return false, nil
 }
 
-// Retorna uma instância do tipo net.conn e um tipo error 
-func RetornaInstanciaNetConn(host string, portaTCP int) (net.Conn, error) {
-	timeOutConexao := time.Second
-	conexao, errConexao := net.DialTimeout("tcp", net.JoinHostPort(host, fmt.Sprint(portaTCP)), timeOutConexao)
-
-	return conexao, errConexao
+// Retorna uma instância do tipo net.Listener e um tipo error 
+func RetornaInstanciaNetConn(host string, portaTCP int) (net.Listener, error) {
+	return net.Listen("tcp", fmt.Sprintf("%s:%d", host, portaTCP))
 }
