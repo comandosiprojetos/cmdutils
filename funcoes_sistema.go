@@ -201,7 +201,7 @@ func CriarPastaIgnorandoCasoJaExista(nomePasta string) error {
 		os.MkdirAll(nomePasta, os.ModePerm)
 
 		if _, errStat := os.Stat(nomePasta); os.IsNotExist(errStat) {
-			return fmt.Errorf("Não foi possível criar a pasta '%s'. Erro original: %s", nomePasta, errStat.Error())
+			return fmt.Errorf("Não foi possível criar a pasta '%s'.", nomePasta)
 		}
 	}
 
@@ -212,12 +212,12 @@ func CriarPastaIgnorandoCasoJaExista(nomePasta string) error {
 // retorna um error
 func CriarPastaValidandoSeAPastaExiste(nomePasta string) error {
 	if _, errStat := os.Stat(nomePasta); !os.IsNotExist(errStat) {
-		return fmt.Errorf("Não foi possível criar a pasta '%s' Pasta já existe. Erro original: %s", nomePasta, errStat.Error())
+		return fmt.Errorf("Não foi possível criar a pasta '%s' Pasta já existe.", nomePasta)
 	} else {
 		os.MkdirAll(nomePasta, os.ModePerm)
 
 		if _, errStat := os.Stat(nomePasta); os.IsNotExist(errStat) {
-			return fmt.Errorf("Não foi possível criar a pasta '%s'. Erro original: %s", nomePasta, errStat.Error())
+			return fmt.Errorf("Não foi possível criar a pasta '%s'.", nomePasta)
 		}
 	}
 

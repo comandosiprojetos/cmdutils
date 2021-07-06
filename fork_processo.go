@@ -36,9 +36,9 @@ type ProcessStateListener interface {
 	OnError(processMonitor *ProcessMonitor, err error)
 }
 
-func CriarForkProcesso(pathProcesso string, argumento string) {
+func CriarForkProcessoWindows(pathProcesso string, argumento string) {
 	processStateListenerImpl := &ProcessStateListenerImpl{make(chan bool)}
-	fork(processStateListenerImpl, pathProcesso, argumento) 
+	fork(processStateListenerImpl, pathProcesso, argumento)
 
 	<-processStateListenerImpl.monitor
 }
