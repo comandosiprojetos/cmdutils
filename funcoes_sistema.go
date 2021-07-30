@@ -1,6 +1,7 @@
 package cmdutils
 
 import (
+	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
@@ -22,9 +23,9 @@ import (
 	"unicode"
 
 	"github.com/denisbrodbeck/machineid"
+	human "github.com/dustin/go-humanize"
 	"github.com/google/uuid"
 	"github.com/pbnjay/memory"
-	human "github.com/dustin/go-humanize"
 	"github.com/shirou/gopsutil/disk"
 )
 
@@ -555,51 +556,51 @@ func RetornaMemoriaDisponivelMaquinaFormatada() string {
 }
 
 type DadosDisco struct {
-    FileSystem       string
-    EspacoTotal      string
-    EspacoUsado      string
-    EspacoDisponivel string
-    PercentualUsado  string
-    Montagem         string
+	FileSystem       string
+	EspacoTotal      string
+	EspacoUsado      string
+	EspacoDisponivel string
+	PercentualUsado  string
+	Montagem         string
 }
 
 // Retorna uma lista com informações de cada unidade de disco instalada na máquina
 // com informações de tamanho do disco total, tamanho usado, tamanho livre, filesystem
 // e unidade de montagem e também retorna um tipo error
 func InformacoesDiscosInstaladosNaMaquina() ([]DadosDisco, error) {
-    var listaInformacoesDisco []DadosDisco
+	var listaInformacoesDisco []DadosDisco
 
 	parts, errPartitions := disk.Partitions(true)
-    if errPartitions != nil {
-        return nil, errPartitions
-    }
+	if errPartitions != nil {
+		return nil, errPartitions
+	}
 
 	for _, p := range parts {
 		device := p.Mountpoint
 		s, errUsageDisk := disk.Usage(device)
-        if errUsageDisk != nil {
-            return nil, errUsageDisk
-        }
+		if errUsageDisk != nil {
+			return nil, errUsageDisk
+		}
 
 		if s.Total == 0 {
-		    continue
+			continue
 		}
 
 		percent := fmt.Sprintf("%2.f%%", s.UsedPercent)
 
-        var informacaoDisco DadosDisco
+		var informacaoDisco DadosDisco
 
-        informacaoDisco.Montagem = p.Mountpoint
-        informacaoDisco.FileSystem = s.Fstype
-        informacaoDisco.EspacoTotal = human.Bytes(s.Total)
-        informacaoDisco.EspacoUsado = human.Bytes(s.Used)
-        informacaoDisco.EspacoDisponivel = human.Bytes(s.Free)
-        informacaoDisco.PercentualUsado = percent
+		informacaoDisco.Montagem = p.Mountpoint
+		informacaoDisco.FileSystem = s.Fstype
+		informacaoDisco.EspacoTotal = human.Bytes(s.Total)
+		informacaoDisco.EspacoUsado = human.Bytes(s.Used)
+		informacaoDisco.EspacoDisponivel = human.Bytes(s.Free)
+		informacaoDisco.PercentualUsado = percent
 
-        listaInformacoesDisco = append(listaInformacoesDisco, informacaoDisco)
+		listaInformacoesDisco = append(listaInformacoesDisco, informacaoDisco)
 	}
 
-    return listaInformacoesDisco, nil
+	return listaInformacoesDisco, nil
 }
 
 // Retorna uma string com nome da máquina atual e um tipo error
@@ -610,4 +611,84 @@ func NomeMaquina() (string, error) {
 	}
 
 	return nomeMaquina, nil
+}
+
+// Recebe uma string com o comando a ser executado e retorna o stdout do comando e um tipo error
+func ExecutaComandoTerminalLinux(tipoComando string) (string, error) {
+	var stdout bytes.Buffer
+	var stderr bytes.Buffer
+
+	cmd := exec.Command("bash", "-c", tipoComando)
+
+	cmd.Stdout = &stdout
+	cmd.Stderr = &stderr
+
+	err := cmd.Run()
+	if err != nil {
+		return "", fmt.Errorf("[ERRO] %s", err.Error())
+	}
+
+	return stdout.String(), nil
+}
+
+// Recebe uma string com o comando a ser executado e retorna o stdout do comando e um tipo error
+// Utilizado apenas no windows
+func ExecutaComandoTerminalWindows(command string) (string, error) {
+	cmd := exec.Command("cmd", "/C", command)
+
+	stdOut, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("[ERRO] %s", err.Error())
+	}
+
+	return string(stdOut), nil
+}
+
+// Recebe uma string com o nome de um executável e retorna uma o string com o
+// path absoluto de um executável no windows e um tipo error
+// comando semelhante ao wish do linux
+// o nome do executável informado precisa estar no path global do windows
+func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
+	comando := fmt.Sprintf("%s in (%s) do @echo.   %s", "for %i", nomeExe, "%~$PATH:i")
+
+	cmd := exec.Command("cmd", "/C", comando)
+
+	stdOut, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", err
+	}
+
+	pathRetornado := strings.TrimSpace(strings.ReplaceAll(string(stdOut), `\`, `\\`))
+
+	return pathRetornado, nil
+}
+
+// Retorna uma string informando o chassis sob o qual a distro linux está sendo executada
+// e também retorna um tipo error
+func ChassisMaquinaLinux() (string, error) {
+	cmd := "hostnamectl | grep Chassis:"
+	retornoComando, errCmd := ExecutaComandoTerminalLinux(cmd)
+	if errCmd != nil {
+		return "", errCmd
+	}
+
+	retornoComNomeChassiRemovido := strings.ReplaceAll(retornoComando, "Chassis:", "")
+	retornoComEspacosRemovido := strings.TrimSpace(retornoComNomeChassiRemovido)
+
+	return retornoComEspacosRemovido, nil
+}
+
+// Retorna uma string informando a versão do kernel da distro linux instalada
+// e também retorna um tipo error
+func VersaoKernelMaquinaLinux() (string, error) {
+	cmd := "hostnamectl | grep Kernel:"
+	retornoComando, errCmd := ExecutaComandoTerminalLinux(cmd)
+	if errCmd != nil {
+		return "", errCmd
+	}
+
+	retornoComNomeKernelRemovido := strings.ReplaceAll(retornoComando, "Kernel:", "")
+	retornoComEspacosRemovido := strings.TrimSpace(retornoComNomeKernelRemovido)
+
+	return retornoComEspacosRemovido, nil
 }
