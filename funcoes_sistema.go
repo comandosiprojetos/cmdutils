@@ -1,7 +1,6 @@
 package cmdutils
 
 import (
-	"bytes"
 	"crypto/aes"
 	"crypto/cipher"
 	"crypto/md5"
@@ -24,6 +23,9 @@ import (
 
 	"github.com/denisbrodbeck/machineid"
 	"github.com/google/uuid"
+	"github.com/pbnjay/memory"
+	human "github.com/dustin/go-humanize"
+	"github.com/shirou/gopsutil/disk"
 )
 
 // Retorna uma string com o tipo de barras utilizado no linux ou no windows
@@ -33,25 +35,6 @@ func RetornaBarrasOs() string {
 	}
 
 	return "/"
-}
-
-// Recebe uma string com o nome de um executável e retorna uma o string com o
-// path absoluto de um executável no windows e um tipo error
-// comando semelhante ao wish do linux
-// o nome do executável informado precisa estar no path global do windows
-func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
-	comando := fmt.Sprintf("%s in (%s) do @echo.   %s", "for %i", nomeExe, "%~$PATH:i")
-
-	cmd := exec.Command("cmd", "/C", comando)
-
-	stdOut, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", err
-	}
-
-	pathRetornado := strings.TrimSpace(strings.ReplaceAll(string(stdOut), `\`, `\\`))
-
-	return pathRetornado, nil
 }
 
 // Retorna uma string com o diretorio do próprio executável em execução e um tipo error
@@ -536,38 +519,6 @@ func RemoverEspacosString(str string) string {
 	}, str)
 }
 
-// Recebe uma string com o comando a ser executado e retorna o stdout do comando e um tipo error
-// Utilizado apenas no windows
-func ExecutaComandoTerminalWindows(command string) (string, error) {
-	cmd := exec.Command("cmd", "/C", command)
-
-	stdOut, err := cmd.CombinedOutput()
-	if err != nil {
-		return "", fmt.Errorf("[ERRO] %s", err.Error())
-	}
-
-	return string(stdOut), nil
-}
-
-// Recebe uma string com o comando a ser executado e retorna o stdout do comando e um tipo error
-// Utilizado apenas no linux
-func ExecutaComandoTerminalLinux(tipoComando string) (string, error) {
-	var stdout bytes.Buffer
-	var stderr bytes.Buffer
-
-	cmd := exec.Command("bash", "-c", tipoComando)
-
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	err := cmd.Run()
-	if err != nil {
-		return "", fmt.Errorf("[ERRO] %s", err.Error())
-	}
-
-	return stdout.String(), nil
-}
-
 // Retorna uma string contendo a arquitetura do processador
 // x86_64 para processadores de 64 bits e i368 para sistemas de 32 bits
 func RetornaArquiteturaProcessador() string {
@@ -583,4 +534,80 @@ func RetornaArquiteturaProcessador() string {
 	}
 
 	return ""
+}
+
+// Retorna uma string contento o total de memória instalada na máquina
+// formatando a unidade de medida
+// exemplo: 4,98 GB
+func RetornaTotalMemoriaMaquinaFormatada() string {
+	totalMemoria := float64(memory.TotalMemory())
+	valorEmBytesFormatado := FormatarValorEmBytes(totalMemoria)
+	return valorEmBytesFormatado
+}
+
+// Retorna uma string contento o total de memória disponível na máquina
+// formatando a unidade de medida
+// exemplo: 11,25 GB
+func RetornaMemoriaDisponivelMaquinaFormatada() string {
+	totalMemoriaLivre := float64(memory.FreeMemory())
+	valorEmBytesFormatado := FormatarValorEmBytes(totalMemoriaLivre)
+	return valorEmBytesFormatado
+}
+
+type DadosDisco struct {
+    FileSystem       string
+    EspacoTotal      string
+    EspacoUsado      string
+    EspacoDisponivel string
+    PercentualUsado  string
+    Montagem         string
+}
+
+// Retorna uma lista com informações de cada unidade de disco instalada na máquina
+// com informações de tamanho do disco total, tamanho usado, tamanho livre, filesystem
+// e unidade de montagem e também retorna um tipo error
+func InformacoesDiscosInstaladosNaMaquina() ([]DadosDisco, error) {
+    var listaInformacoesDisco []DadosDisco
+
+	parts, errPartitions := disk.Partitions(true)
+    if errPartitions != nil {
+        return nil, errPartitions
+    }
+
+	for _, p := range parts {
+		device := p.Mountpoint
+		s, errUsageDisk := disk.Usage(device)
+        if errUsageDisk != nil {
+            return nil, errUsageDisk
+        }
+
+		if s.Total == 0 {
+		    continue
+		}
+
+		percent := fmt.Sprintf("%2.f%%", s.UsedPercent)
+
+        var informacaoDisco DadosDisco
+
+        informacaoDisco.Montagem = p.Mountpoint
+        informacaoDisco.FileSystem = s.Fstype
+        informacaoDisco.EspacoTotal = human.Bytes(s.Total)
+        informacaoDisco.EspacoUsado = human.Bytes(s.Used)
+        informacaoDisco.EspacoDisponivel = human.Bytes(s.Free)
+        informacaoDisco.PercentualUsado = percent
+
+        listaInformacoesDisco = append(listaInformacoesDisco, informacaoDisco)
+	}
+
+    return listaInformacoesDisco, nil
+}
+
+// Retorna uma string com nome da máquina atual e um tipo error
+func NomeMaquina() (string, error) {
+	nomeMaquina, err := os.Hostname()
+	if err != nil {
+		return "", err
+	}
+
+	return nomeMaquina, nil
 }

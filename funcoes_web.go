@@ -1,8 +1,10 @@
 package cmdutils
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"net"
 	"net/http"
 	"net/url"
@@ -65,6 +67,30 @@ func RetornaIpLocalMaquina() (string, error) {
 	return fmt.Sprint(localAddr.IP), nil
 }
 
+type IP struct {
+	Query string
+}
+
+// Retorna uma string com o ip público da rede e um tipo error
+// Função utiliza a api http://ip-api.com/json/
+func RetornaIpPublico() (string, error) {
+	req, err := http.Get("http://ip-api.com/json/")
+	if err != nil {
+		return "", err
+	}
+	defer req.Body.Close()
+
+	body, err := ioutil.ReadAll(req.Body)
+	if err != nil {
+		return "", err
+	}
+
+	var ip IP
+	json.Unmarshal(body, &ip)
+
+	return ip.Query, nil
+}
+
 // Recebe uma string com uma url e retorna um valor booleano para informar se a url é válida ou não
 func PingUrl(url string) bool {
 	resp, netErrors := http.Get(url)
@@ -114,7 +140,7 @@ func PortaTcpEstaAberta(host string, portaTCP int) (bool, error) {
 	return false, nil
 }
 
-// Retorna uma instância do tipo net.Listener e um tipo error 
+// Retorna uma instância do tipo net.Listener e um tipo error
 func RetornaInstanciaNetConn(host string, portaTCP int) (net.Listener, error) {
 	return net.Listen("tcp", fmt.Sprintf("%s:%d", host, portaTCP))
 }
