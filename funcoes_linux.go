@@ -7,7 +7,7 @@ import (
 )
 
 // Retorna uma string com a versão da distro linux e um tipo error
-func RetornaVersaoSistemaLinux() (string, error) {
+func RetornaVersaoSistemaOperacional() (string, error) {
 	comando := `awk -F= '$1=="PRETTY_NAME" { print $2 ;}' /etc/os-release`
 
 	retornoComando, errComando := cmdutils.ExecutaComandoTerminalLinux(comando)

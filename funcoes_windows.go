@@ -43,7 +43,7 @@ func RetornaPathCompletoExecutavelWindows(nomeExe string) (string, error) {
 // Retorna uma string com a versão do windows lendo a informação do registro do windows
 // e retorna um tipo error
 // exemplo retorno: Windows 10 Pro
-func RetornaVersaoWindows() (string, error) {
+func RetornaVersaoSistemaOperacional() (string, error) {
 	registroCurrentVersion, err := registry.OpenKey(registry.LOCAL_MACHINE, `SOFTWARE\Microsoft\Windows NT\CurrentVersion`, registry.QUERY_VALUE)
 	if err != nil {
 		return "", fmt.Errorf("Não foi possível abrir o registro para retornar a versão do windows. Erro: %s.",
