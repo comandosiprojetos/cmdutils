@@ -1,7 +1,6 @@
 package cmdutils
 
 import (
-	"bytes"
 	"fmt"
 	"strings"
 )
@@ -10,7 +9,7 @@ import (
 func RetornaVersaoSistemaOperacional() (string, error) {
 	comando := `awk -F= '$1=="PRETTY_NAME" { print $2 ;}' /etc/os-release`
 
-	retornoComando, errComando := cmdutils.ExecutaComandoTerminalLinux(comando)
+	retornoComando, errComando := ExecutaComandoTerminalLinux(comando)
 	if errComando != nil {
 		return "", fmt.Errorf("Execução do comando '%s' falhou. Erro: %s.",
 			comando, errComando.Error())
@@ -29,7 +28,7 @@ func RetornaVersaoSistemaOperacional() (string, error) {
 func RetornaModeloProcessador() (string, error) {
 	comando := `cat /proc/cpuinfo | grep 'model name' | uniq`
 
-	retornoComando, errComando := cmdutils.ExecutaComandoTerminalLinux(comando)
+	retornoComando, errComando := ExecutaComandoTerminalLinux(comando)
 	if errComando != nil {
 		return "", fmt.Errorf("Execução do comando '%s' falhou. Erro: %s.",
 			comando, errComando.Error())
